@@ -2,7 +2,10 @@
 
 import { writeFileSync, readFileSync, existsSync } from 'fs';
 import axios from 'axios';
+import { default as forge } from 'node-forge';
 import config from '../config';
+
+export enum PublicKeyType { 'JWKS', 'PEM' }
 
 export class OAuthUtils {
 
@@ -15,11 +18,19 @@ export class OAuthUtils {
   readFileSync(config.oauthCertificatePath).toString() : null;
 
   /**
+   * Getting the client credentials for using the authorization REST API
+   */
+  static getClientCredentials() {
+    return (Buffer.from(`${config.clientCred.id}:${config.clientCred.secret}`).toString('base64'));
+  }
+
+  /**
    * Getting the public key from local files or downloading it from the authorization server
    */
   static async getOAuthPublicKey() {
     if (!existsSync(config.oauthPublicKeyPath)) {
       await OAuthUtils.downloadPublicKey();
+      // TODO: Adding validation of the public key by the pem certificate
       return OAuthUtils.publicKeyContents;
     }
 
@@ -56,7 +67,7 @@ export class OAuthUtils {
     await OAuthUtils.downloadSSLObject(
       config.JWKS_ROUTE,
       config.oauthJWKSPath,
-      OAuthUtils.validatePublicKey,
+      OAuthUtils.validatePublicKey.bind({}, PublicKeyType.JWKS),
     );
   }
 
@@ -115,14 +126,22 @@ export class OAuthUtils {
    * @param publicKey - Public key value to validate
    * @returns Boolean value indicates if the public key is belong to the current certificate
    */
-  private static validatePublicKey(publicKey: string): boolean {
+  private static async validatePublicKey(keyType: PublicKeyType = PublicKeyType['PEM'],
+                                         publicKey: string) {
 
-    // Checks if we actually have certificate
-    if (!OAuthUtils.certificateContents) {
-      return false;
+    // Gets the certificate for validating the public key
+    const certificate = await OAuthUtils.getOAuthCertificate();
+
+    // Exporting the public key from the certificate
+    const forgeCertificate = forge.pki.certificateFromPem(certificate);
+    const publicKeyPem = forge.pki.publicKeyFromPem(forgeCertificate.publicKey);
+
+    // Checking if the public keys are equals
+    if (keyType === PublicKeyType.PEM) {
+      return publicKeyPem === publicKey;
     }
 
+    // TODO: Checking when key type is JWKS
     return true;
-    // TODO: Verify if the public key belongs to the certificate
   }
 }
