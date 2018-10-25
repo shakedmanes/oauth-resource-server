@@ -4,6 +4,7 @@ import express from 'express';
 import bodyParser from 'body-parser';
 import morgan from 'morgan';
 import dotenv from 'dotenv';
+import resourcesRoutes, { default as ResourcesRoutes } from './resources/resources.routes';
 
 // Load environments variables
 dotenv.load();
@@ -20,5 +21,6 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(morgan(process.env.NODE_ENV || 'dev'));
 
 // Routes
+app.use('/resources/', resourcesRoutes);
 
 export default app;

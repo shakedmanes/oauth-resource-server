@@ -8,7 +8,7 @@ const config = {
   // Copy paths before compilation
   copyPath: [
     { src: './src/certs/files' ,dest: './dist/certs' },
-    // { src: './src/views' , dest: './dist' },
+    { src: './src/files' , dest: './dist' },
   ],
 
   // OpenSSL and Certificates configurations

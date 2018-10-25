@@ -1,6 +1,6 @@
 // oauth.utils
 
-import { writeFileSync, readFileSync, existsSync } from 'fs';
+import { writeFileSync, readFileSync, existsSync, mkdirSync } from 'fs';
 import axios from 'axios';
 import { default as forge } from 'node-forge';
 import config from '../config';
@@ -30,8 +30,11 @@ export class OAuthUtils {
   static async getOAuthPublicKey() {
     if (!existsSync(config.oauthPublicKeyPath)) {
       await OAuthUtils.downloadPublicKey();
-      // TODO: Adding validation of the public key by the pem certificate
-      return OAuthUtils.publicKeyContents;
+
+      // Validate the public key with the certificate
+      if (OAuthUtils.validatePublicKey(PublicKeyType.PEM, OAuthUtils.publicKeyContents)) {
+        throw new Error('Invalid corresponding public key to certificate');
+      }
     }
 
     return OAuthUtils.publicKeyContents;
@@ -43,7 +46,6 @@ export class OAuthUtils {
   static async getOAuthCertificate() {
     if (!existsSync(config.oauthCertificatePath)) {
       await OAuthUtils.downloadCertificate();
-      return OAuthUtils.certificateContents;
     }
 
     return OAuthUtils.certificateContents;
@@ -97,6 +99,13 @@ export class OAuthUtils {
 
     // Saving the SSL object locally for later use
     if (response.status === 200) {
+
+      const directory = path.substr(0, path.lastIndexOf('\\'));
+
+      if (!existsSync(directory)) {
+        mkdirSync(directory);
+      }
+
       writeFileSync(path, response.data);
       if (contentHandler) contentHandler(response.data);
     }
@@ -134,6 +143,9 @@ export class OAuthUtils {
 
     // Exporting the public key from the certificate
     const forgeCertificate = forge.pki.certificateFromPem(certificate);
+
+    // TODO: Fix that line - cause public key from forge is not pem format
+    // (its raw public key with e, n)
     const publicKeyPem = forge.pki.publicKeyFromPem(forgeCertificate.publicKey);
 
     // Checking if the public keys are equals
