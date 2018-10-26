@@ -1,0 +1,50 @@
+{
+  "name": "oauth-resource-server",
+  "version": "0.1.0",
+  "description": "Example of resource server supporting OAuth2.",
+  "main": "index.js",
+  "scripts": {
+    "init": "npm run generate-env && npm run generate-certs && npm run copy-files && npm run build",
+    "start": "npm run build && node ./dist/server.js",
+    "build": "npm run copy-files && tsc",
+    "generate-certs": "node ./scripts/generateCertificates.js",
+    "generate-env": "node ./scripts/generateEnv.js",
+    "copy-files": "node ./scripts/copyFiles.js",
+    "tslint": "tslint -c tslint.json -p tsconfig.json"
+  },
+  "bin": {
+    "tslint": "./node_modules/.bin/tslint",
+    "tsc": "./node_moduels/.bin/tsc"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/shakedmanes/oauth-resource-server.git"
+  },
+  "author": "Shaked Manes & Michael T",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/shakedmanes/oauth-resource-server/issues"
+  },
+  "homepage": "https://github.com/shakedmanes/oauth-resource-server#readme",
+  "dependencies": {
+    "axios": "^0.18.0",
+    "body-parser": "^1.18.3",
+    "dotenv": "^6.1.0",
+    "express": "^4.16.4",
+    "jsonwebtoken": "^8.3.0",
+    "morgan": "^1.9.1",
+    "node-forge": "^0.7.6"
+  },
+  "devDependencies": {
+    "@types/body-parser": "^1.17.0",
+    "@types/dotenv": "^4.0.3",
+    "@types/express": "^4.16.0",
+    "@types/jsonwebtoken": "^7.2.8",
+    "@types/morgan": "^1.7.35",
+    "@types/node-forge": "^0.7.6",
+    "shelljs": "^0.8.2",
+    "tslint": "^5.11.0",
+    "tslint-config-airbnb": "^5.11.0",
+    "typescript": "^3.1.3"
+  }
+}
