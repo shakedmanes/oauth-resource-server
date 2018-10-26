@@ -10,6 +10,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const oauth_controller_1 = require("./oauth.controller");
+const error_types_1 = require("../error/error.types");
 class OAuthMiddlewares {
     /**
      * Middleware to protect routes and ensure validation of an access token
@@ -24,17 +25,11 @@ class OAuthMiddlewares {
             const accessToken = req.headers.authorization;
             // Check if access token provided
             if (accessToken) {
-                try {
-                    const decodedToken = yield oauth_controller_1.OAuthController.validateTokenBySignature(accessToken);
-                    req.token = decodedToken;
-                    return next();
-                }
-                catch (err) {
-                    // Invalid access token signature
-                    return next(new Error('Invalid access token signature.'));
-                }
+                const decodedToken = yield oauth_controller_1.OAuthController.validateTokenBySignature(accessToken);
+                req.token = decodedToken;
+                return next();
             }
-            return next(new Error('Invalid access token provided.'));
+            throw new error_types_1.InvalidParameter('Access token not provided.');
         });
     }
     /**
@@ -49,17 +44,14 @@ class OAuthMiddlewares {
         return __awaiter(this, void 0, void 0, function* () {
             const accessToken = req.headers.authorization;
             // Check if access token provided
-            if (accessToken) {
-                try {
-                    const decodedToken = yield oauth_controller_1.OAuthController.validateTokenByIntrospection(accessToken);
-                    req.token = decodedToken;
-                    return next();
-                }
-                catch (err) {
-                    return next(new Error('Invalid acces token provided.'));
-                }
+            if (!accessToken) {
+                throw new error_types_1.InvalidParameter('Access token not provided.');
             }
-            return next(new Error('Invalid access token provided.'));
+            if (accessToken) {
+                const decodedToken = yield oauth_controller_1.OAuthController.validateTokenByIntrospection(accessToken);
+                req.token = decodedToken;
+                next();
+            }
         });
     }
 }

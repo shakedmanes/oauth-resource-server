@@ -8,6 +8,7 @@ const express_1 = __importDefault(require("express"));
 const body_parser_1 = __importDefault(require("body-parser"));
 const morgan_1 = __importDefault(require("morgan"));
 const dotenv_1 = __importDefault(require("dotenv"));
+const error_handler_1 = require("./error/error.handler");
 const resources_routes_1 = __importDefault(require("./resources/resources.routes"));
 // Load environments variables
 dotenv_1.default.load();
@@ -21,5 +22,7 @@ app.use(body_parser_1.default.urlencoded({ extended: true }));
 app.use(morgan_1.default(process.env.NODE_ENV || 'dev'));
 // Routes
 app.use('/resources/', resources_routes_1.default);
+// Error handler
+app.use(error_handler_1.errorHandler);
 exports.default = app;
 //# sourceMappingURL=app.js.map

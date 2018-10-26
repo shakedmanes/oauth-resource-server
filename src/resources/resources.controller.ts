@@ -11,7 +11,7 @@ export class ResourcesController {
    * @returns file contents or null if file doesn't exists
    */
   static getSpecificFile(path: string) {
-    if (fs.lstatSync(path).isFile()) {
+    if (fs.existsSync(path) && fs.lstatSync(path).isFile()) {
       return fs.readFileSync(path).toString();
     }
 
@@ -25,7 +25,7 @@ export class ResourcesController {
    * @returns list of files containing in folder or empty list if folder doesn't exists
    */
   static getFilesContaining(path: string) {
-    if (fs.lstatSync(path).isDirectory()) {
+    if (fs.existsSync(path) && fs.lstatSync(path).isDirectory()) {
       return fs.readdirSync(path);
     }
 

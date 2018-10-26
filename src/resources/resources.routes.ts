@@ -1,30 +1,36 @@
 // resources.routes
 
-import { Router } from 'express';
+import { Router, Request, Response, NextFunction } from 'express';
 import { OAuthMiddlewares } from '../oauth/oauth.middlewares';
 import { ResourcesController } from './resources.controller';
 import { resources } from './resources.mock';
+import { NotFound } from '../error/error.types';
+import { wrapAsync } from '../asyncWrapper';
 
 const resourcesRoutes = Router();
 
 // Gets files containing in end-user/server folder (Checking access token by introspection)
-resourcesRoutes.get('/files', OAuthMiddlewares.ensureAccessTokenByIntrospection, (req, res) => {
-  const resourceOwner = req.token.sub;
+resourcesRoutes.get(
+  '/files',
+  wrapAsync(OAuthMiddlewares.ensureAccessTokenByIntrospection),
+  (req: Request, res: Response, next: NextFunction) => {
+    const resourceOwner = req.token.sub;
 
-  // Checking if the resource owner exists in resources
-  if (resourceOwner in resources) {
-    const filesList = ResourcesController.getFilesContaining(resources[resourceOwner].filesPath);
-    return res.status(200).send(filesList);
-  }
+    // Checking if the resource owner exists in resources
+    if (resourceOwner in resources) {
+      const filesList = ResourcesController.getFilesContaining(resources[resourceOwner].filesPath);
+      return res.status(200).send(filesList);
+    }
 
-  return res.status(404).send('Directory not found');
-});
+    throw new NotFound('Directory not found.');
+  },
+);
 
 // Gets file contents in end-user/server folder (Checking access token by signature)
 resourcesRoutes.get(
   '/files/:filename',
-  OAuthMiddlewares.ensureAccessTokenBySignature,
-  (req, res) => {
+  wrapAsync(OAuthMiddlewares.ensureAccessTokenBySignature),
+  (req: Request, res: Response) => {
     const resourceOwner = req.token.sub;
     const filename = req.params.filename;
 
@@ -37,7 +43,7 @@ resourcesRoutes.get(
       if (fileContents) return res.status(200).send(fileContents);
     }
 
-    return res.status(404).send('Directory or filename not found');
+    throw new NotFound('Directory or filename not found');
   },
 );
 

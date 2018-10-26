@@ -4,6 +4,7 @@ import { writeFileSync, readFileSync, existsSync, mkdirSync } from 'fs';
 import axios from 'axios';
 import { default as forge } from 'node-forge';
 import config from '../config';
+import { Unauthorized } from '../error/error.types';
 
 export enum PublicKeyType { 'JWKS', 'PEM' }
 
@@ -32,8 +33,8 @@ export class OAuthUtils {
       await OAuthUtils.downloadPublicKey();
 
       // Validate the public key with the certificate
-      if (OAuthUtils.validatePublicKey(PublicKeyType.PEM, OAuthUtils.publicKeyContents)) {
-        throw new Error('Invalid corresponding public key to certificate');
+      if (!await OAuthUtils.validatePublicKey(PublicKeyType.PEM, OAuthUtils.publicKeyContents)) {
+        throw new Unauthorized('Invalid corresponding public key to certificate');
       }
     }
 
@@ -144,9 +145,8 @@ export class OAuthUtils {
     // Exporting the public key from the certificate
     const forgeCertificate = forge.pki.certificateFromPem(certificate);
 
-    // TODO: Fix that line - cause public key from forge is not pem format
-    // (its raw public key with e, n)
-    const publicKeyPem = forge.pki.publicKeyFromPem(forgeCertificate.publicKey);
+    // Formating the raw public key into pem
+    const publicKeyPem = forge.pki.publicKeyToPem(forgeCertificate.publicKey);
 
     // Checking if the public keys are equals
     if (keyType === PublicKeyType.PEM) {

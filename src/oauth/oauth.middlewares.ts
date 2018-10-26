@@ -2,6 +2,7 @@
 
 import { Request, Response, NextFunction } from 'express';
 import { OAuthController } from './oauth.controller';
+import { InvalidParameter } from '../error/error.types';
 
 export class OAuthMiddlewares {
 
@@ -18,17 +19,12 @@ export class OAuthMiddlewares {
 
     // Check if access token provided
     if (accessToken) {
-      try {
-        const decodedToken = await OAuthController.validateTokenBySignature(accessToken);
-        req.token = decodedToken;
-        return next();
-      } catch (err) {
-        // Invalid access token signature
-        return next(new Error('Invalid access token signature.'));
-      }
+      const decodedToken = await OAuthController.validateTokenBySignature(accessToken);
+      req.token = decodedToken;
+      return next();
     }
 
-    return next(new Error('Invalid access token provided.'));
+    throw new InvalidParameter('Access token not provided.');
   }
 
   /**
@@ -43,16 +39,16 @@ export class OAuthMiddlewares {
     const accessToken = req.headers.authorization;
 
     // Check if access token provided
-    if (accessToken) {
-      try {
-        const decodedToken = await OAuthController.validateTokenByIntrospection(accessToken);
-        req.token = decodedToken;
-        return next();
-      } catch (err) {
-        return next(new Error('Invalid acces token provided.'));
-      }
+
+    if (!accessToken) {
+      throw new InvalidParameter('Access token not provided.');
     }
 
-    return next(new Error('Invalid access token provided.'));
+    if (accessToken) {
+      const decodedToken = await OAuthController.validateTokenByIntrospection(accessToken);
+      req.token = decodedToken;
+      next();
+    }
+
   }
 }

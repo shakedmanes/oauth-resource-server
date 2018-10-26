@@ -5,6 +5,7 @@ import { default as jwt } from 'jsonwebtoken';
 import { OAuthUtils } from './oauth.utils';
 import config from '../config';
 import { resources } from '../resources/resources.mock';
+import { Unauthorized } from '../error/error.types';
 
 export class OAuthController {
 
@@ -16,12 +17,12 @@ export class OAuthController {
   static async validateTokenBySignature(accessToken: string) {
     const decodedToken = <any>(jwt.verify(accessToken, await OAuthUtils.getOAuthPublicKey()));
 
-    // Checking if token audience is ours url and substance is in resources
+    // Checking if token audience is ours url and subject is in resources
     if (decodedToken.aud === config.AUDIENCE_URL && decodedToken.sub in resources) {
       return decodedToken;
     }
 
-    throw new Error('Unauthorized access token provided.');
+    throw new Unauthorized('Unauthorized access token provided.');
   }
 
   /**
@@ -30,25 +31,21 @@ export class OAuthController {
    * @param accessToken - Access token to validate
    */
   static async validateTokenByIntrospection(accessToken: string) {
-    try {
-      const response = await axios.post(
-        config.OAUTH_TOKEN_INTROSPECTION_ROUTE,
-        { token: accessToken },
-        { headers: { Authorization: `Basic ${OAuthUtils.getClientCredentials()}` } },
-      );
+    const response = await axios.post(
+      config.OAUTH_TOKEN_INTROSPECTION_ROUTE,
+      { token: accessToken },
+      { headers: { Authorization: `Basic ${OAuthUtils.getClientCredentials()}` } },
+    );
 
-      // If request successfully
-      if (response.status === 200) {
-        if (response.data.active &&
-            response.data.aud === config.AUDIENCE_URL &&
-            response.data.sub in resources) {
-          return response.data;
-        }
-        throw new Error('Unauthorized access token provided.');
+    // Checking if token audience is ours url and subject is in resources
+    if (response.status === 200) {
+      if (response.data.active &&
+          response.data.aud === config.AUDIENCE_URL &&
+          response.data.sub in resources) {
+        return response.data;
       }
-    } catch (err) {
-      console.log(err);
-      return false;
+
+      throw new Unauthorized('Unauthorized access token provided.');
     }
   }
 }

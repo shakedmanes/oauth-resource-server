@@ -17,6 +17,7 @@ const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const oauth_utils_1 = require("./oauth.utils");
 const config_1 = __importDefault(require("../config"));
 const resources_mock_1 = require("../resources/resources.mock");
+const error_types_1 = require("../error/error.types");
 class OAuthController {
     /**
      * Validates access token by its public key and audience and authorized clients
@@ -26,11 +27,11 @@ class OAuthController {
     static validateTokenBySignature(accessToken) {
         return __awaiter(this, void 0, void 0, function* () {
             const decodedToken = (jsonwebtoken_1.default.verify(accessToken, yield oauth_utils_1.OAuthUtils.getOAuthPublicKey()));
-            // Checking if token audience is ours url and substance is in resources
+            // Checking if token audience is ours url and subject is in resources
             if (decodedToken.aud === config_1.default.AUDIENCE_URL && decodedToken.sub in resources_mock_1.resources) {
                 return decodedToken;
             }
-            throw new Error('Unauthorized access token provided.');
+            throw new error_types_1.Unauthorized('Unauthorized access token provided.');
         });
     }
     /**
@@ -40,21 +41,15 @@ class OAuthController {
      */
     static validateTokenByIntrospection(accessToken) {
         return __awaiter(this, void 0, void 0, function* () {
-            try {
-                const response = yield axios_1.default.post(config_1.default.OAUTH_TOKEN_INTROSPECTION_ROUTE, { token: accessToken }, { headers: { Authorization: `Basic ${oauth_utils_1.OAuthUtils.getClientCredentials()}` } });
-                // If request successfully
-                if (response.status === 200) {
-                    if (response.data.active &&
-                        response.data.aud === config_1.default.AUDIENCE_URL &&
-                        response.data.sub in resources_mock_1.resources) {
-                        return response.data;
-                    }
-                    throw new Error('Unauthorized access token provided.');
+            const response = yield axios_1.default.post(config_1.default.OAUTH_TOKEN_INTROSPECTION_ROUTE, { token: accessToken }, { headers: { Authorization: `Basic ${oauth_utils_1.OAuthUtils.getClientCredentials()}` } });
+            // Checking if token audience is ours url and subject is in resources
+            if (response.status === 200) {
+                if (response.data.active &&
+                    response.data.aud === config_1.default.AUDIENCE_URL &&
+                    response.data.sub in resources_mock_1.resources) {
+                    return response.data;
                 }
-            }
-            catch (err) {
-                console.log(err);
-                return false;
+                throw new error_types_1.Unauthorized('Unauthorized access token provided.');
             }
         });
     }

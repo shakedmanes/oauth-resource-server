@@ -6,11 +6,15 @@
   "scripts": {
     "init": "npm run generate-env && npm run generate-certs && npm run copy-files && npm run build",
     "start": "npm run build && node ./dist/server.js",
-    "build": "tsc",
+    "build": "npm run copy-files && tsc",
     "generate-certs": "node ./scripts/generateCertificates.js",
     "generate-env": "node ./scripts/generateEnv.js",
     "copy-files": "node ./scripts/copyFiles.js",
     "tslint": "tslint -c tslint.json -p tsconfig.json"
+  },
+  "bin": {
+    "tslint": "./node_modules/.bin/tslint",
+    "tsc": "./node_moduels/.bin/tsc"
   },
   "repository": {
     "type": "git",

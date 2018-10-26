@@ -16,6 +16,7 @@ const fs_1 = require("fs");
 const axios_1 = __importDefault(require("axios"));
 const node_forge_1 = __importDefault(require("node-forge"));
 const config_1 = __importDefault(require("../config"));
+const error_types_1 = require("../error/error.types");
 var PublicKeyType;
 (function (PublicKeyType) {
     PublicKeyType[PublicKeyType["JWKS"] = 0] = "JWKS";
@@ -36,8 +37,8 @@ class OAuthUtils {
             if (!fs_1.existsSync(config_1.default.oauthPublicKeyPath)) {
                 yield OAuthUtils.downloadPublicKey();
                 // Validate the public key with the certificate
-                if (OAuthUtils.validatePublicKey(PublicKeyType.PEM, OAuthUtils.publicKeyContents)) {
-                    throw new Error('Invalid corresponding public key to certificate');
+                if (!(yield OAuthUtils.validatePublicKey(PublicKeyType.PEM, OAuthUtils.publicKeyContents))) {
+                    throw new error_types_1.Unauthorized('Invalid corresponding public key to certificate');
                 }
             }
             return OAuthUtils.publicKeyContents;
@@ -129,9 +130,8 @@ class OAuthUtils {
             const certificate = yield OAuthUtils.getOAuthCertificate();
             // Exporting the public key from the certificate
             const forgeCertificate = node_forge_1.default.pki.certificateFromPem(certificate);
-            // TODO: Fix that line - cause public key from forge is not pem format
-            // (its raw public key with e, n)
-            const publicKeyPem = node_forge_1.default.pki.publicKeyFromPem(forgeCertificate.publicKey);
+            // Formating the raw public key into pem
+            const publicKeyPem = node_forge_1.default.pki.publicKeyToPem(forgeCertificate.publicKey);
             // Checking if the public keys are equals
             if (keyType === PublicKeyType.PEM) {
                 return publicKeyPem === publicKey;
