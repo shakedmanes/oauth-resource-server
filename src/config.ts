@@ -9,14 +9,15 @@ const config = {
 
   // OAuth server configuration
   OAUTH_BASE_URL: 'https://localhost:1337',
-  AUDIENCE_URL: 'https://localhost:5000', // Our URL as audience for the access token
+  AUDIENCE_URL: 'https://localhost:6000', // Our URL as audience for the access token
   get PUBLIC_KEY_ROUTE() { return `${this.OAUTH_BASE_URL}/.well-known/publickey.pem`; },
   get JWKS_ROUTE() { return `${this.OAUTH_BASE_URL}/.well-known/jwks.json`; },
   get CERTIFICATE_ROUTE() { return `${this.OAUTH_BASE_URL}/.well-known/certificate.pem`; },
   get OAUTH_TOKEN_INTROSPECTION_ROUTE() { return `${this.OAUTH_BASE_URL}/oauth2/tokeninfo`; },
   clientCred: {
-    id: '123456',
-    secret: '123456',
+    id: 'jote5IxK57vyDWgmCl_6SKtZJJGqE~2Wjl7qmd0c',
+    // tslint:disable-next-line:max-line-length
+    secret: '_oWLDsJ1dfLgsWowynahcUminGfMKbhixsSI1JUjne06dkIU5u_q1kq0pRmtJtbvcREKFxxVToYTYVH0z1m9u~OWxrrBvB7NOWjQ',
   },
 
   // Local OAuth files (public key, certificate)
