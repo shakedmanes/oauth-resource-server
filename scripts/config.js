@@ -2,7 +2,7 @@ const pathJoin = require('path').join;
 
 const config = {
   // Environments variables
-  PORT: 5000,
+  PORT: 6000,
   NODE_ENV: 'dev',
 
   // Copy paths before compilation
